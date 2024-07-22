@@ -3,6 +3,7 @@ import pyaudio
 import numpy as np
 import queue
 
+
 class AudioRecorder:
     FORMAT = pyaudio.paInt16
     CHANNELS = 1
@@ -15,7 +16,8 @@ class AudioRecorder:
 
     def record_audio(self):
         audio = pyaudio.PyAudio()
-        stream = audio.open(format=self.FORMAT, channels=self.CHANNELS, rate=self.RATE, input=True, frames_per_buffer=self.CHUNK)
+        stream = audio.open(format=self.FORMAT, channels=self.CHANNELS, rate=self.RATE, input=True,
+                            frames_per_buffer=self.CHUNK)
         print("Recording...")
 
         while True:
@@ -32,4 +34,3 @@ class AudioRecorder:
 
     def get_audio_queue(self):
         return self.audio_queue
-

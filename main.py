@@ -1,6 +1,4 @@
-# main.py
 import threading
-import time
 
 import numpy as np
 import tensorflow as tf
@@ -15,10 +13,11 @@ class_names = {
     3: 'gun_shot'
 }
 
-
 # Load the trained model
 model = tf.keras.models.load_model('model1_1.h5')
-log_file=FileLogger('logs.txt')
+log_file = FileLogger('logs.txt')
+
+
 def classify_audio(audio_queue, audio_processor):
     while True:
         if not audio_queue.empty():
@@ -27,15 +26,16 @@ def classify_audio(audio_queue, audio_processor):
             processed_data = np.expand_dims(processed_data, axis=0)
             prediction = model.predict(processed_data)
             result = np.argmax(prediction, axis=1)[0]
-            event_description = f"Detected sound: {class_names[result]} confidence:{round(prediction[0][result]*100,2)}%"
-            log_file.log_event(event_description)
+            confidence = round(prediction[0][result] * 100)
+            if confidence > 85:
+                event_description = f"Detected sound: {class_names[result]} confidence:{round(prediction[0][result] * 100, 2)}%"
+                log_file.log_event(event_description)
             print(result)
 
-            #Class Names: ['chainsaw' 'dog_bark' 'engine_idling' 'gun_shot']
+            # Class Names: ['chainsaw' 'dog_bark' 'engine_idling' 'gun_shot']
 
 
 if __name__ == '__main__':
-
     audio_recorder = AudioRecorder()
     audio_processor = AudioProcessor()
 

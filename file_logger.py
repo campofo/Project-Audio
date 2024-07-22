@@ -8,4 +8,4 @@ class FileLogger:
     def log_event(self, event_description):
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         with open(self.file, 'a') as f:
-            f.write(f"{timestamp}-{event_description}\n")
+            f.write(f"[{timestamp}]  {event_description}\n")
