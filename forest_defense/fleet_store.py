@@ -79,6 +79,18 @@ class FleetStore:
                 )
                 """
             )
+            connection.execute(
+                """
+                CREATE TABLE IF NOT EXISTS device_events (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    node_id TEXT NOT NULL,
+                    timestamp TEXT NOT NULL,
+                    event_type TEXT NOT NULL,
+                    operator TEXT NOT NULL,
+                    notes TEXT NOT NULL
+                )
+                """
+            )
             self._ensure_incident_columns(connection)
             connection.execute(
                 "CREATE INDEX IF NOT EXISTS idx_incidents_node_time ON incidents(node_id, timestamp)"
@@ -92,7 +104,14 @@ class FleetStore:
                 ON incident_events(incident_id, timestamp)
                 """
             )
+            connection.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_device_events_node_time
+                ON device_events(node_id, timestamp)
+                """
+            )
             self._backfill_incident_events(connection)
+            self._backfill_device_events(connection)
 
     def _ensure_incident_columns(self, connection) -> None:
         existing = {
@@ -134,6 +153,32 @@ class FleetStore:
                     "created",
                     "device",
                     f"{row['node_id']} reported {row['class_label']}",
+                ),
+            )
+
+    def _backfill_device_events(self, connection) -> None:
+        rows = connection.execute(
+            """
+            SELECT devices.node_id, devices.last_seen, devices.status
+            FROM devices
+            LEFT JOIN device_events ON device_events.node_id = devices.node_id
+            WHERE device_events.id IS NULL
+            """
+        ).fetchall()
+        for row in rows:
+            connection.execute(
+                """
+                INSERT INTO device_events (
+                    node_id, timestamp, event_type, operator, notes
+                )
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (
+                    row["node_id"],
+                    row["last_seen"],
+                    "registered",
+                    "system",
+                    f"Device entered registry with status {row['status']}",
                 ),
             )
 
@@ -198,6 +243,7 @@ class FleetStore:
 
     def upsert_device(self, device: DeviceRecord, api_key: str = "") -> DeviceRecord:
         existing_key = self.get_api_key(device.node_id)
+        existing_device = self.get_device(device.node_id)
         key = api_key or existing_key or ""
         with self._connect() as connection:
             connection.execute(
@@ -236,6 +282,22 @@ class FleetStore:
                     key,
                 ),
             )
+            if not existing_device:
+                self._append_device_event(
+                    connection,
+                    device.node_id,
+                    "registered",
+                    "system",
+                    f"Device registered with status {device.status}",
+                )
+            elif existing_device.get("status") != device.status:
+                self._append_device_event(
+                    connection,
+                    device.node_id,
+                    "status_changed",
+                    "system",
+                    f"{existing_device.get('status')} -> {device.status}",
+                )
         return device
 
     def heartbeat(
@@ -301,6 +363,13 @@ class FleetStore:
             )
             if cursor.rowcount == 0:
                 return None
+            self._append_device_event(
+                connection,
+                node_id,
+                "key_rotated",
+                "admin",
+                "Device API key rotated",
+            )
         device = self.get_device(node_id)
         if not device:
             return None
@@ -315,7 +384,54 @@ class FleetStore:
             )
             if cursor.rowcount == 0:
                 return None
+            self._append_device_event(
+                connection,
+                node_id,
+                "revoked",
+                "admin",
+                "Device access revoked",
+            )
         return self.get_device(node_id)
+
+    def _append_device_event(
+        self,
+        connection,
+        node_id: str,
+        event_type: str,
+        operator: str,
+        notes: str = "",
+    ) -> None:
+        connection.execute(
+            """
+            INSERT INTO device_events (
+                node_id, timestamp, event_type, operator, notes
+            )
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (
+                node_id,
+                self._now(),
+                event_type,
+                operator,
+                notes,
+            ),
+        )
+
+    @staticmethod
+    def _device_event_from_row(row) -> Dict:
+        return dict(row)
+
+    def list_device_events(self, node_id: str) -> List[Dict]:
+        with self._connect() as connection:
+            rows = connection.execute(
+                """
+                SELECT * FROM device_events
+                WHERE node_id = ?
+                ORDER BY timestamp ASC, id ASC
+                """,
+                (node_id,),
+            ).fetchall()
+        return [self._device_event_from_row(row) for row in rows]
 
     def list_devices(self) -> List[Dict]:
         with self._connect() as connection:

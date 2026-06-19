@@ -130,6 +130,7 @@ Central fleet endpoints:
 
 - `GET /devices`
 - `GET /devices/{node_id}`
+- `GET /devices/{node_id}/events`
 - `POST /devices/register` with `api_key` plus `X-Admin-Key` for new devices, or the existing device key for already-provisioned devices
 - `POST /devices/{node_id}/rotate-key` with `X-Admin-Key`
 - `POST /devices/{node_id}/revoke` with `X-Admin-Key`
@@ -145,7 +146,7 @@ Central state is stored in `fleet_db_path`, which defaults to `data/fleet.db`. J
 
 Device health is computed from `last_seen` heartbeats. By default, nodes become `stale` after 300 seconds without a heartbeat and `offline` after 900 seconds. Adjust `stale_after_seconds` and `offline_after_seconds` in the central config for the field network.
 
-If a node is lost, replaced, or suspected of leaking its key, revoke it from the central API. Revoked nodes cannot send heartbeats or upload incidents. Use key rotation to issue a new per-node key; copy the returned key into that node's `/etc/forest-defense-audio/node.env` before restarting its services.
+If a node is lost, replaced, or suspected of leaking its key, revoke it from the central API. Revoked nodes cannot send heartbeats or upload incidents. Use key rotation to issue a new per-node key; copy the returned key into that node's `/etc/forest-defense-audio/node.env` before restarting its services. Device registration, key rotation, and revocation are recorded in a device event timeline for operational audit.
 
 Incidents are created with `open` status. Operators can acknowledge alerts when a response unit takes ownership, resolve them after field action, or reopen them if follow-up is needed. Each creation and status change is also written to an incident event timeline for audit and handoff between response teams.
 

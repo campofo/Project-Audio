@@ -113,6 +113,8 @@ def test_register_remote_device_and_ingest_incident(tmp_path):
         headers={"X-Admin-Key": "admin-test-key"},
     )
     assert register_response.status_code == 200
+    device_events = client.get("/devices/fdp-remote-node/events").json()["events"]
+    assert [event["event_type"] for event in device_events] == ["registered"]
 
     incident = {
         "timestamp": "2026-06-15T12:00:00+00:00",
@@ -238,6 +240,14 @@ def test_register_remote_device_and_ingest_incident(tmp_path):
         headers={"X-Device-Key": "rotated-remote-key"},
     )
     assert revoked_heartbeat.status_code == 401
+    device_detail = client.get("/devices/fdp-remote-node").json()
+    assert [event["event_type"] for event in device_detail["events"]] == [
+        "registered",
+        "key_rotated",
+        "revoked",
+    ]
+    device_events = client.get("/devices/fdp-remote-node/events").json()["events"]
+    assert device_events == device_detail["events"]
 
 
 def test_new_device_registration_requires_admin_key(tmp_path):

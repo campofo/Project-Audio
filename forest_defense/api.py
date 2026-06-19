@@ -196,7 +196,14 @@ def create_app(
             "device": device,
             "incident_summary": store.summary(node_id=node_id),
             "recent_incidents": store.list_incidents(limit=25, node_id=node_id),
+            "events": store.list_device_events(node_id),
         }
+
+    @app.get("/devices/{node_id}/events")
+    def device_events(node_id: str):
+        if not store.get_device(node_id):
+            raise HTTPException(status_code=404, detail="Device not found")
+        return {"events": store.list_device_events(node_id)}
 
     @app.post("/devices/register")
     async def register_device(

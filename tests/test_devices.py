@@ -43,6 +43,8 @@ def test_fleet_store_persists_devices_auth_and_incidents(tmp_path):
     store.register_config(config)
     assert store.authorize("fdp-node-001", "test-device-key") is True
     assert store.authorize("fdp-node-001", "wrong") is False
+    device_events = store.list_device_events("fdp-node-001")
+    assert [event["event_type"] for event in device_events] == ["registered"]
 
     record = IncidentRecord(
         timestamp="2026-06-15T12:00:00+00:00",
@@ -96,6 +98,12 @@ def test_fleet_store_persists_devices_auth_and_incidents(tmp_path):
     assert rotated["device_api_key"] == "rotated-key"
     assert store.authorize("fdp-node-001", "test-device-key") is False
     assert store.authorize("fdp-node-001", "rotated-key") is True
+    device_events = store.list_device_events("fdp-node-001")
+    assert [event["event_type"] for event in device_events] == [
+        "registered",
+        "revoked",
+        "key_rotated",
+    ]
 
 
 def test_fleet_store_computes_online_stale_and_offline_health(tmp_path):
