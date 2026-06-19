@@ -1,0 +1,32 @@
+{
+  "node_id": "fdp-audio-node-001",
+  "location": {
+    "latitude": 9.4075,
+    "longitude": -0.8533
+  },
+  "model_path": "model1_1.h5",
+  "sample_rate": 16000,
+  "capture_rate": 44100,
+  "sample_duration_seconds": 5,
+  "confidence_threshold": 0.75,
+  "incident_log_path": "data/incidents.jsonl",
+  "sync_state_path": "data/sync_state.json",
+  "device_registry_path": "data/devices.json",
+  "fleet_db_path": "data/fleet.db",
+  "central_api_url": "http://127.0.0.1:8000",
+  "device_api_key": "change-this-node-secret",
+  "admin_api_key": "change-this-admin-secret",
+  "stale_after_seconds": 300,
+  "offline_after_seconds": 900,
+  "labels": [
+    "background",
+    "chainsaw",
+    "gunshot",
+    "fire_crackling"
+  ],
+  "incident_classes": [
+    "chainsaw",
+    "gunshot",
+    "fire_crackling"
+  ]
+}

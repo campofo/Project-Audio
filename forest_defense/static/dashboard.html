@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Forest Defense Audio Node</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Forest Defense Initiative</p>
+        <h1>Forest Audio Fleet</h1>
+      </div>
+      <div id="health" class="status-pill">Checking</div>
+    </header>
+
+    <section class="grid">
+      <article class="panel">
+        <h2>Fleet</h2>
+        <div class="metric-row">
+          <div class="metric compact">
+            <span id="deviceTotal">0</span>
+            <small>Devices</small>
+          </div>
+          <div class="metric compact">
+            <span id="onlineTotal">0</span>
+            <small>Online</small>
+          </div>
+          <div class="metric compact">
+            <span id="staleTotal">0</span>
+            <small>Stale</small>
+          </div>
+          <div class="metric compact">
+            <span id="offlineTotal">0</span>
+            <small>Offline</small>
+          </div>
+        </div>
+        <div id="deviceCards" class="device-list"></div>
+      </article>
+      <article class="panel">
+        <h2>Incidents</h2>
+        <div class="metric">
+          <span id="incidentTotal">0</span>
+          <small>Total verified alerts</small>
+        </div>
+        <div id="classBreakdown" class="chips"></div>
+        <div id="deviceBreakdown" class="chips secondary"></div>
+      </article>
+    </section>
+
+    <section class="ops-grid">
+      <article class="panel">
+        <div class="section-header">
+          <h2>Recent Alerts</h2>
+          <div class="actions">
+            <select id="deviceFilter" aria-label="Filter by device">
+              <option value="">All devices</option>
+            </select>
+            <button id="refreshButton" type="button">Refresh</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Class</th>
+                <th>Confidence</th>
+                <th>Status</th>
+                <th>Device</th>
+                <th>Location</th>
+              </tr>
+            </thead>
+            <tbody id="incidentRows"></tbody>
+          </table>
+        </div>
+      </article>
+
+      <aside class="panel detail-panel">
+        <div class="section-header">
+          <h2>Incident Detail</h2>
+          <span id="selectedIncidentBadge" class="status-tag">none</span>
+        </div>
+        <div id="incidentDetail" class="detail-empty">Select an alert to inspect response history.</div>
+        <form id="operatorForm" class="operator-form">
+          <label>
+            Admin key
+            <input id="adminKeyInput" type="password" autocomplete="current-password">
+          </label>
+          <label>
+            Operator
+            <input id="operatorInput" type="text" value="operator">
+          </label>
+          <label>
+            Notes
+            <textarea id="notesInput" rows="3"></textarea>
+          </label>
+          <div class="action-grid">
+            <button id="acknowledgeButton" type="button">Acknowledge</button>
+            <button id="resolveButton" type="button">Resolve</button>
+            <button id="reopenButton" type="button">Reopen</button>
+          </div>
+          <p id="actionMessage" class="action-message"></p>
+        </form>
+      </aside>
+    </section>
+  </main>
+
+  <script src="/static/dashboard.js"></script>
+</body>
+</html>

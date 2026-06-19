@@ -1,0 +1,9 @@
+fastapi
+httpx
+librosa
+numpy
+pyaudio
+python-multipart
+pytest
+tensorflow
+uvicorn

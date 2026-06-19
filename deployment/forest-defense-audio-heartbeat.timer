@@ -1,0 +1,12 @@
+[Unit]
+Description=Send Forest Defense Audio Node Heartbeat Every Minute
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=1min
+AccuracySec=10s
+Persistent=true
+Unit=forest-defense-audio-heartbeat.service
+
+[Install]
+WantedBy=timers.target
