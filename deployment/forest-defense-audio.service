@@ -7,6 +7,7 @@ Wants=network-online.target
 Type=simple
 WorkingDirectory=/opt/forest-defense-audio
 Environment=PYTHONUNBUFFERED=1
+EnvironmentFile=-/etc/forest-defense-audio/node.env
 ExecStart=/opt/forest-defense-audio/.venv/bin/python main.py --config /etc/forest-defense-audio/node_config.json live
 Restart=always
 RestartSec=5

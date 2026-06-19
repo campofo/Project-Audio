@@ -20,6 +20,8 @@ PLACEHOLDER_SECRETS = {
     "demo-test-key",
     "test-device-key",
     "admin-test-key",
+    "replace-with-this-node-secret",
+    "replace-with-central-admin-secret",
 }
 
 

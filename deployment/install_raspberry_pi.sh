@@ -10,7 +10,10 @@ sudo apt-get install -y python3-venv portaudio19-dev
 sudo mkdir -p "$APP_DIR" "$CONFIG_DIR"
 sudo cp -R . "$APP_DIR"
 sudo cp config/node_config.example.json "$CONFIG_DIR/node_config.json"
+sudo cp deployment/node.env.example "$CONFIG_DIR/node.env.example"
 sudo chown -R pi:pi "$APP_DIR" "$CONFIG_DIR"
+sudo chmod 750 "$CONFIG_DIR"
+sudo chmod 640 "$CONFIG_DIR/node_config.json" "$CONFIG_DIR/node.env.example"
 
 python3 -m venv "$APP_DIR/.venv"
 "$APP_DIR/.venv/bin/python" -m pip install --upgrade pip

@@ -80,6 +80,13 @@ python main.py --config config/node_config.example.json diagnose
 
 The diagnostic output includes a production readiness result. Field nodes should not be installed until readiness is `ready`; placeholder device/admin keys, missing model files, empty incident classes, or a missing central API URL are reported as blockers.
 
+Deployment secrets can be supplied through environment variables so they do not have to live in the JSON config:
+
+- `FOREST_DEFENSE_NODE_ID`
+- `FOREST_DEFENSE_CENTRAL_API_URL`
+- `FOREST_DEFENSE_DEVICE_API_KEY`
+- `FOREST_DEFENSE_ADMIN_API_KEY`
+
 ## Multi-Device Operation
 
 Run one central API server:
@@ -179,3 +186,5 @@ sudo systemctl enable --now forest-defense-audio-sync.timer
 ```
 
 For field nodes, the live audio service continuously classifies microphone windows. The heartbeat timer reports node health every minute, and the sync timer retries local incident uploads every five minutes so a node can catch up after a network outage. Run the API service on the central command device; it is optional on remote audio-only nodes unless you want each Pi to expose its own local test API.
+
+The systemd units also load `/etc/forest-defense-audio/node.env` when it exists. Copy `deployment/node.env.example` to that path on each Pi, set the generated per-node key and central URL, then keep the file readable only by the service user or administrators.

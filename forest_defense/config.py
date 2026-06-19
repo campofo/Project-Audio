@@ -1,4 +1,5 @@
 import json
+import os
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterable, List, Sequence, Set
@@ -43,6 +44,10 @@ def _require_keys(data: dict, keys: Iterable[str], source: Path) -> None:
         raise ValueError(f"{source} is missing required key(s): {names}")
 
 
+def _env_or_config(name: str, data: dict, key: str, default: str = "") -> str:
+    return os.environ.get(name, str(data.get(key, default)))
+
+
 def load_config(path: str = "config/node_config.example.json") -> NodeConfig:
     source = Path(path)
     with source.open("r", encoding="utf-8") as handle:
@@ -60,7 +65,7 @@ def load_config(path: str = "config/node_config.example.json") -> NodeConfig:
         raise ValueError(f"{source} must define at least one class label")
 
     return NodeConfig(
-        node_id=str(data["node_id"]),
+        node_id=_env_or_config("FOREST_DEFENSE_NODE_ID", data, "node_id"),
         location=LocationConfig(
             latitude=float(data["location"]["latitude"]),
             longitude=float(data["location"]["longitude"]),
@@ -76,9 +81,21 @@ def load_config(path: str = "config/node_config.example.json") -> NodeConfig:
         sync_state_path=str(data.get("sync_state_path", "data/sync_state.json")),
         device_registry_path=str(data.get("device_registry_path", "data/devices.json")),
         fleet_db_path=str(data.get("fleet_db_path", "data/fleet.db")),
-        central_api_url=str(data.get("central_api_url", "")),
-        device_api_key=str(data.get("device_api_key", "")),
-        admin_api_key=str(data.get("admin_api_key", "")),
+        central_api_url=_env_or_config(
+            "FOREST_DEFENSE_CENTRAL_API_URL",
+            data,
+            "central_api_url",
+        ),
+        device_api_key=_env_or_config(
+            "FOREST_DEFENSE_DEVICE_API_KEY",
+            data,
+            "device_api_key",
+        ),
+        admin_api_key=_env_or_config(
+            "FOREST_DEFENSE_ADMIN_API_KEY",
+            data,
+            "admin_api_key",
+        ),
         stale_after_seconds=int(data.get("stale_after_seconds", 300)),
         offline_after_seconds=int(data.get("offline_after_seconds", 900)),
     )
