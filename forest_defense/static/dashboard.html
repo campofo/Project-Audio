@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Forest Defense Audio Node</title>
-  <link rel="stylesheet" href="/static/styles.css">
+  <link rel="stylesheet" href="/static/styles.css?v=20260619-device-detail">
 </head>
 <body>
   <main class="shell">
@@ -48,6 +48,14 @@
         <div id="classBreakdown" class="chips"></div>
         <div id="deviceBreakdown" class="chips secondary"></div>
       </article>
+    </section>
+
+    <section class="panel device-detail-panel">
+      <div class="section-header">
+        <h2>Device Detail</h2>
+        <span id="selectedDeviceBadge" class="status-tag">none</span>
+      </div>
+      <div id="deviceDetail" class="detail-empty">Select a fleet device to inspect health and lifecycle events.</div>
     </section>
 
     <section class="ops-grid">
@@ -108,6 +116,6 @@
     </section>
   </main>
 
-  <script src="/static/dashboard.js"></script>
+  <script src="/static/dashboard.js?v=20260619-device-detail"></script>
 </body>
 </html>

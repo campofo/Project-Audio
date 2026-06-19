@@ -189,6 +189,11 @@ h2 {
   color: #24406d;
 }
 
+.status-tag.revoked {
+  background: #2f2f2f;
+  color: #ffffff;
+}
+
 .device-list {
   display: grid;
   gap: 8px;
@@ -220,6 +225,16 @@ h2 {
   border-color: #e2a79d;
 }
 
+.device-card.revoked {
+  background: #f1f1f1;
+  border-color: #777777;
+}
+
+.device-card.selected {
+  outline: 3px solid #739e7f;
+  outline-offset: 2px;
+}
+
 .device-card strong,
 .device-card small {
   min-width: 0;
@@ -237,6 +252,10 @@ h2 {
 
 .device-card.offline span {
   color: #9a2f1f;
+}
+
+.device-card.revoked span {
+  color: #2f2f2f;
 }
 
 .device-card small {
@@ -373,6 +392,17 @@ th {
   overflow-wrap: anywhere;
 }
 
+.device-detail-panel {
+  margin-bottom: 16px;
+}
+
+.device-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(280px, 0.9fr);
+  gap: 16px;
+  align-items: start;
+}
+
 .detail-body h3 {
   margin: 0 0 10px;
   font-size: 15px;
@@ -474,6 +504,10 @@ th {
   }
 
   .status-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .device-detail-grid {
     grid-template-columns: 1fr;
   }
 

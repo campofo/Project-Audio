@@ -10,6 +10,8 @@ const deviceBreakdownEl = document.getElementById("deviceBreakdown");
 const incidentRowsEl = document.getElementById("incidentRows");
 const refreshButton = document.getElementById("refreshButton");
 const deviceFilterEl = document.getElementById("deviceFilter");
+const selectedDeviceBadgeEl = document.getElementById("selectedDeviceBadge");
+const deviceDetailEl = document.getElementById("deviceDetail");
 const selectedIncidentBadgeEl = document.getElementById("selectedIncidentBadge");
 const incidentDetailEl = document.getElementById("incidentDetail");
 const operatorFormEl = document.getElementById("operatorForm");
@@ -22,6 +24,7 @@ const reopenButton = document.getElementById("reopenButton");
 const actionMessageEl = document.getElementById("actionMessage");
 
 let selectedIncidentId = null;
+let selectedNodeId = null;
 
 function formatTime(value) {
   if (!value) return "Unknown";
@@ -51,12 +54,15 @@ function renderDevices(devices, health) {
   staleTotalEl.textContent = health.stale || 0;
   offlineTotalEl.textContent = health.offline || 0;
   deviceCardsEl.innerHTML = devices.length
-    ? devices.map((device) => `<button class="device-card ${device.health || device.status}" data-node-id="${device.node_id}" type="button">
+    ? devices.map((device) => {
+      const selected = selectedNodeId === device.node_id ? " selected" : "";
+      return `<button class="device-card ${device.health || device.status}${selected}" data-node-id="${device.node_id}" type="button">
         <strong>${device.node_id}</strong>
         <span>${device.health || device.status}</span>
         <small>${device.latitude}, ${device.longitude}</small>
         <small>Last seen ${formatAge(device.seconds_since_seen)}</small>
-      </button>`).join("")
+      </button>`;
+    }).join("")
     : '<div class="empty-card">No devices registered</div>';
 
   const options = ['<option value="">All devices</option>'].concat(
@@ -66,6 +72,61 @@ function renderDevices(devices, health) {
   if (devices.some((device) => device.node_id === currentValue)) {
     deviceFilterEl.value = currentValue;
   }
+}
+
+function renderDeviceDetail(data) {
+  const device = data.device;
+  const events = data.events || [];
+  const summary = data.incident_summary || {};
+  selectedDeviceBadgeEl.textContent = device.health || device.status || "unknown";
+  selectedDeviceBadgeEl.className = `status-tag ${device.health || device.status || ""}`;
+  const timeline = events.length
+    ? events.map((event) => `<li>
+        <strong>${escapeHtml(event.event_type)}</strong>
+        <span>${formatTime(event.timestamp)}</span>
+        <small>${escapeHtml(event.operator)}${event.notes ? ` - ${escapeHtml(event.notes)}` : ""}</small>
+      </li>`).join("")
+    : "<li><strong>No events</strong><span>Timeline has not started</span></li>";
+
+  deviceDetailEl.className = "detail-body";
+  deviceDetailEl.innerHTML = `
+    <div class="device-detail-grid">
+      <dl class="detail-grid">
+        <dt>Node</dt><dd>${escapeHtml(device.node_id)}</dd>
+        <dt>Location</dt><dd>${device.latitude}, ${device.longitude}</dd>
+        <dt>Last seen</dt><dd>${formatAge(device.seconds_since_seen)}</dd>
+        <dt>Model</dt><dd>${escapeHtml(device.model_path)}</dd>
+      </dl>
+      <dl class="detail-grid">
+        <dt>Alerts</dt><dd>${summary.total_incidents || 0}</dd>
+        <dt>Firmware</dt><dd>${escapeHtml(device.firmware_version || "unknown")}</dd>
+        <dt>Classes</dt><dd>${escapeHtml((device.incident_classes || []).join(", "))}</dd>
+        <dt>Notes</dt><dd>${escapeHtml(device.notes || "none")}</dd>
+      </dl>
+      <div>
+        <h3>Device Timeline</h3>
+        <ol class="timeline">${timeline}</ol>
+      </div>
+    </div>
+  `;
+}
+
+function clearDeviceDetail() {
+  selectedNodeId = null;
+  selectedDeviceBadgeEl.textContent = "none";
+  selectedDeviceBadgeEl.className = "status-tag";
+  deviceDetailEl.className = "detail-empty";
+  deviceDetailEl.textContent = "Select a fleet device to inspect health and lifecycle events.";
+}
+
+async function loadDeviceDetail(nodeId) {
+  selectedNodeId = nodeId;
+  const response = await fetch(`/devices/${encodeURIComponent(nodeId)}`);
+  if (!response.ok) {
+    clearDeviceDetail();
+    return;
+  }
+  renderDeviceDetail(await response.json());
 }
 
 function renderSummary(summary) {
@@ -216,6 +277,9 @@ async function refresh() {
     renderDevices(devices.devices || [], devices.health || {});
     renderSummary(summary || status.incident_summary || {});
     renderIncidents(incidents.incidents || []);
+    if (selectedNodeId) {
+      await loadDeviceDetail(selectedNodeId);
+    }
     if (selectedIncidentId) {
       await loadIncidentDetail(selectedIncidentId);
     }
@@ -231,6 +295,7 @@ deviceCardsEl.addEventListener("click", (event) => {
   const card = event.target.closest("[data-node-id]");
   if (!card) return;
   deviceFilterEl.value = card.dataset.nodeId;
+  loadDeviceDetail(card.dataset.nodeId);
   refresh();
 });
 incidentRowsEl.addEventListener("click", (event) => {
@@ -242,6 +307,7 @@ acknowledgeButton.addEventListener("click", () => updateIncident("acknowledge"))
 resolveButton.addEventListener("click", () => updateIncident("resolve"));
 reopenButton.addEventListener("click", () => updateIncident("reopen"));
 operatorFormEl.addEventListener("submit", (event) => event.preventDefault());
+clearDeviceDetail();
 clearIncidentDetail();
 refresh();
 setInterval(refresh, 10000);
