@@ -1,4 +1,5 @@
 import json
+import secrets
 import sqlite3
 from dataclasses import asdict
 from datetime import datetime, timezone
@@ -157,7 +158,9 @@ class FleetStore:
         except Exception:
             age_seconds = offline_after_seconds + 1
 
-        if age_seconds >= offline_after_seconds:
+        if device.get("status") == "revoked":
+            health = "revoked"
+        elif age_seconds >= offline_after_seconds:
             health = "offline"
         elif age_seconds >= stale_after_seconds:
             health = "stale"
@@ -275,8 +278,44 @@ class FleetStore:
         return str(row["api_key"]) if row else ""
 
     def authorize(self, node_id: str, api_key: str) -> bool:
+        device = self.get_device(node_id)
+        if not device or device.get("status") == "revoked":
+            return False
         expected = self.get_api_key(node_id)
         return bool(expected) and api_key == expected
+
+    def rotate_device_key(self, node_id: str, api_key: str = "") -> Optional[Dict]:
+        key = api_key or secrets.token_urlsafe(32)
+        with self._connect() as connection:
+            cursor = connection.execute(
+                """
+                UPDATE devices
+                SET api_key = ?,
+                    status = CASE
+                        WHEN status = 'revoked' THEN 'provisioned'
+                        ELSE status
+                    END
+                WHERE node_id = ?
+                """,
+                (key, node_id),
+            )
+            if cursor.rowcount == 0:
+                return None
+        device = self.get_device(node_id)
+        if not device:
+            return None
+        device["device_api_key"] = key
+        return device
+
+    def revoke_device(self, node_id: str) -> Optional[Dict]:
+        with self._connect() as connection:
+            cursor = connection.execute(
+                "UPDATE devices SET status = 'revoked', api_key = '' WHERE node_id = ?",
+                (node_id,),
+            )
+            if cursor.rowcount == 0:
+                return None
+        return self.get_device(node_id)
 
     def list_devices(self) -> List[Dict]:
         with self._connect() as connection:

@@ -204,6 +204,41 @@ def test_register_remote_device_and_ingest_incident(tmp_path):
     assert events[-1]["operator"] == "FSD"
     assert events[-1]["notes"] == "Follow-up patrol requested"
 
+    denied_rotation = client.post(
+        "/devices/fdp-remote-node/rotate-key",
+        json={"device_api_key": "rotated-remote-key"},
+    )
+    assert denied_rotation.status_code == 401
+    rotated = client.post(
+        "/devices/fdp-remote-node/rotate-key",
+        json={"device_api_key": "rotated-remote-key"},
+        headers={"X-Admin-Key": "admin-test-key"},
+    )
+    assert rotated.status_code == 200
+    assert rotated.json()["device_api_key"] == "rotated-remote-key"
+    old_key_heartbeat = client.post(
+        "/devices/fdp-remote-node/heartbeat",
+        headers={"X-Device-Key": "remote-test-key"},
+    )
+    assert old_key_heartbeat.status_code == 401
+    new_key_heartbeat = client.post(
+        "/devices/fdp-remote-node/heartbeat",
+        headers={"X-Device-Key": "rotated-remote-key"},
+    )
+    assert new_key_heartbeat.status_code == 200
+
+    revoked = client.post(
+        "/devices/fdp-remote-node/revoke",
+        headers={"X-Admin-Key": "admin-test-key"},
+    )
+    assert revoked.status_code == 200
+    assert revoked.json()["device"]["status"] == "revoked"
+    revoked_heartbeat = client.post(
+        "/devices/fdp-remote-node/heartbeat",
+        headers={"X-Device-Key": "rotated-remote-key"},
+    )
+    assert revoked_heartbeat.status_code == 401
+
 
 def test_new_device_registration_requires_admin_key(tmp_path):
     config = make_config(tmp_path)

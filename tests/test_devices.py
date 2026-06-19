@@ -87,6 +87,16 @@ def test_fleet_store_persists_devices_auth_and_incidents(tmp_path):
     assert events[-1]["operator"] == "GNFS"
     assert events[-1]["notes"] == "Handled"
 
+    revoked = store.revoke_device("fdp-node-001")
+    assert revoked["status"] == "revoked"
+    assert store.authorize("fdp-node-001", "test-device-key") is False
+
+    rotated = store.rotate_device_key("fdp-node-001", api_key="rotated-key")
+    assert rotated["status"] == "provisioned"
+    assert rotated["device_api_key"] == "rotated-key"
+    assert store.authorize("fdp-node-001", "test-device-key") is False
+    assert store.authorize("fdp-node-001", "rotated-key") is True
+
 
 def test_fleet_store_computes_online_stale_and_offline_health(tmp_path):
     store = FleetStore(str(tmp_path / "fleet.db"))

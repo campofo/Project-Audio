@@ -233,6 +233,33 @@ def create_app(
             registry.upsert(device)
         return {"device": device.__dict__}
 
+    @app.post("/devices/{node_id}/rotate-key")
+    async def rotate_device_key(
+        node_id: str,
+        payload: dict = None,
+        x_admin_key: str = Header(default=""),
+    ):
+        require_admin_key(x_admin_key)
+        payload = payload or {}
+        device = store.rotate_device_key(
+            node_id,
+            api_key=str(payload.get("device_api_key", "")),
+        )
+        if not device:
+            raise HTTPException(status_code=404, detail="Device not found")
+        return {"device": device, "device_api_key": device["device_api_key"]}
+
+    @app.post("/devices/{node_id}/revoke")
+    async def revoke_device(
+        node_id: str,
+        x_admin_key: str = Header(default=""),
+    ):
+        require_admin_key(x_admin_key)
+        device = store.revoke_device(node_id)
+        if not device:
+            raise HTTPException(status_code=404, detail="Device not found")
+        return {"device": device}
+
     @app.post("/devices/{node_id}/heartbeat")
     def heartbeat(node_id: str, x_device_key: str = Header(default="")):
         require_device_key(node_id, x_device_key)
