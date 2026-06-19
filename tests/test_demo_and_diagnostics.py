@@ -23,7 +23,9 @@ def write_config(tmp_path):
   "incident_log_path": "%s",
   "device_registry_path": "%s",
   "fleet_db_path": "%s",
-  "device_api_key": "demo-test-key",
+  "central_api_url": "http://central.local:8000",
+  "device_api_key": "field-node-secret",
+  "admin_api_key": "field-admin-secret",
   "labels": ["background", "chainsaw", "gunshot", "fire_crackling"],
   "incident_classes": ["chainsaw", "gunshot", "fire_crackling"]
 }
@@ -62,3 +64,40 @@ def test_diagnostics_reports_config_and_model_state(tmp_path):
     assert diagnostics["model_exists"] is True
     assert diagnostics["packages"]["numpy"] is True
     assert Path(diagnostics["config_path"]) == config_path
+    assert diagnostics["production_ready"] is True
+    assert diagnostics["readiness_issues"] == []
+
+
+def test_diagnostics_blocks_placeholder_field_config(tmp_path):
+    config_path = tmp_path / "node_config.json"
+    model_path = tmp_path / "model1_1.h5"
+    model_path.write_bytes(b"placeholder")
+    config_path.write_text(
+        """
+{
+  "node_id": "fdp-test-node",
+  "location": {"latitude": 9.4, "longitude": -0.8},
+  "model_path": "%s",
+  "confidence_threshold": 0.75,
+  "device_api_key": "change-this-node-secret",
+  "admin_api_key": "change-this-admin-secret",
+  "labels": ["background", "chainsaw"],
+  "incident_classes": ["chainsaw"]
+}
+"""
+        % model_path,
+        encoding="utf-8",
+    )
+
+    diagnostics = collect_diagnostics(str(config_path))
+
+    assert diagnostics["production_ready"] is False
+    assert "central_api_url is not configured" in diagnostics["readiness_issues"]
+    assert (
+        "device_api_key must be unique and non-placeholder"
+        in diagnostics["readiness_issues"]
+    )
+    assert (
+        "admin_api_key must be unique and non-placeholder"
+        in diagnostics["readiness_issues"]
+    )

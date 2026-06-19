@@ -78,6 +78,8 @@ Check whether the node config, model file, and runtime dependencies are ready:
 python main.py --config config/node_config.example.json diagnose
 ```
 
+The diagnostic output includes a production readiness result. Field nodes should not be installed until readiness is `ready`; placeholder device/admin keys, missing model files, empty incident classes, or a missing central API URL are reported as blockers.
+
 ## Multi-Device Operation
 
 Run one central API server:
@@ -143,6 +145,8 @@ The dashboard at `/` is the first multi-device operations console. It shows all 
 - Confirm USB microphone appears with `arecord -l`.
 - Update `config/node_config.example.json` or create a deployment config with the node ID and fixed GPS coordinates.
 - Replace the example `device_api_key` with a unique secret per node before field deployment.
+- Replace the example `admin_api_key` on the central command device before field deployment.
+- Run `python main.py --config <config> diagnose` and confirm production readiness is `ready`.
 - Confirm `model1_1.h5` is present and labels match its class order.
 - Run `python main.py --config <config> live` and confirm live predictions print.
 - Trigger a known test sound and confirm incidents are written to the configured JSONL path.
