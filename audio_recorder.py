@@ -3,6 +3,7 @@ import pyaudio
 import numpy as np
 import queue
 
+
 class AudioRecorder:
     FORMAT = pyaudio.paInt16
     CHANNELS = 1
@@ -15,16 +16,21 @@ class AudioRecorder:
 
     def record_audio(self):
         audio = pyaudio.PyAudio()
-        stream = audio.open(format=self.FORMAT, channels=self.CHANNELS, rate=self.RATE, input=True, frames_per_buffer=self.CHUNK)
+        stream = audio.open(format=self.FORMAT, channels=self.CHANNELS, rate=self.RATE, input=True,
+                            frames_per_buffer=self.CHUNK)
         print("Recording...")
 
         while True:
             frames = []
-            for _ in range(0, int(self.RATE / self.CHUNK * self.RECORD_SECONDS)):
-                data = stream.read(self.CHUNK)
-                frames.append(np.frombuffer(data, dtype=np.int16))
-            audio_data = np.hstack(frames)
-            self.audio_queue.put(audio_data)
+            try:
+                for _ in range(0, int(self.RATE / self.CHUNK * self.RECORD_SECONDS)):
+                    data = stream.read(self.CHUNK, exception_on_overflow=False)
+                    frames.append(np.frombuffer(data, dtype=np.int16))
+                audio_data = np.hstack(frames)
+                self.audio_queue.put(audio_data)
+            except IOError as e:
+                print(f"Error recording audio: {e}")
+                continue
 
     def get_audio_queue(self):
         return self.audio_queue
