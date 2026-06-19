@@ -1,0 +1,18 @@
+[Unit]
+Description=Forest Defense Audio Node
+After=network-online.target sound.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/forest-defense-audio
+Environment=PYTHONUNBUFFERED=1
+EnvironmentFile=-/etc/forest-defense-audio/node.env
+ExecStart=/opt/forest-defense-audio/.venv/bin/python main.py --config /etc/forest-defense-audio/node_config.json live
+Restart=always
+RestartSec=5
+User=pi
+Group=pi
+
+[Install]
+WantedBy=multi-user.target

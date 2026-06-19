@@ -1,0 +1,9 @@
+{
+  "warning": "Placeholder labels only. Replace this with the exact class order used when model1_1.h5 was trained.",
+  "labels": [
+    "background",
+    "chainsaw",
+    "gunshot",
+    "fire_crackling"
+  ]
+}

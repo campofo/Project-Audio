@@ -1,0 +1,13 @@
+[Unit]
+Description=Forest Defense Audio Node Incident Sync
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/forest-defense-audio
+Environment=PYTHONUNBUFFERED=1
+EnvironmentFile=-/etc/forest-defense-audio/node.env
+ExecStart=/opt/forest-defense-audio/.venv/bin/python main.py --config /etc/forest-defense-audio/node_config.json sync-incidents
+User=pi
+Group=pi

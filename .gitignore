@@ -154,6 +154,14 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
+# Forest Defense runtime data
+data/*.jsonl
+data/*.json
+!data/dataset_manifest.example.csv
+data/*.db
+data/*.db-*
+output/
+
 # PyCharm
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
 #  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
